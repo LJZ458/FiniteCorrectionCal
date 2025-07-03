@@ -48,8 +48,8 @@ function App() {
     try {
       if(POS==='110mm'){
       	if(paramtype==='β'){
-      filename1 ='/GRIF110ATT_beta.xlsx';}
-      	else if(paramtype==='γ'){filename1 ='/GRIF110ATT_gamma.xlsx';}
+      filename1 =import.meta.env.BASE_URL +'/GRIF110ATT_beta.xlsx';}
+      	else if(paramtype==='γ'){filename1 =import.meta.env.BASE_URL +'/GRIF110ATT_gamma.xlsx';}
       }
       else if(POS==='145'){filename1 = 'GRIF145ATT.xlsx';}
 
