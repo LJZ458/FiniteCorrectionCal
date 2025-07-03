@@ -8,7 +8,7 @@ import { Table, Button, Input, Space } from "antd";
 function App() {
   const [count, setCount] = useState(0);
   const [result, setResult] = useState('');
-  
+  const [resulterr, setResulterr] = useState('');
   const [POS, setPOS] = useState(null);
   const [paramtype, setparamtype] = useState(null);
   const [GammaE, setGammaE] = useState({InputGammaE1: "",
@@ -16,12 +16,34 @@ function App() {
   const [Gamma2E, setGamma2E] = useState(null);
   const [plotData110, setPlotData110] = useState(null);
   const [plotData145, setPlotData145] = useState(null);
-
+  const [resultJK, setResultJK] = useState('');
+  const [resultJKsig1, setResultJKsig1] = useState('');
+  const [resultJKsig2, setResultJKsig2] = useState('');
+  const [E1Close, setE1Close] = useState('');
+  const [E2Close, setE2Close] = useState('');
+  
   let filename1 = '';
   let filename2 = '';
   let fitVal = 0;
   let E1 = 0;
   let E2 = 0;
+  
+  //set variables for the fit functions
+  let A_val = 0;
+  let E_0 = 0;
+  let B_val = 0;
+  let C_val = 0;
+  let lambda_s = 0;
+  let lambda_t = 0;
+  let k_val = 0;
+  let A_err = 0;
+  let E_0err = 0;
+  let B_err = 0;
+  let C_err = 0;
+  let lambda_s_err = 0;
+  let lambda_t_err = 0;
+  let k_err = 0;
+  
   const handleChange = (value) => {
     setPOS(value);
     console.log('POS:', value);
@@ -42,6 +64,97 @@ function App() {
     }));
     
   };
+  
+  const g_function = (Energy)=>{
+  	let val = 0;
+  	if(POS==="110mm"){
+  		if(paramtype==="β"){
+  		val =  (0.058/(1 + Math.exp(-0.093*(Energy - 30))) + 0.0199*Math.atan(Math.pow(0.035*(Energy - 30), 0.67)) + 0.89);
+  		}
+  		else{
+  		val =  (0.0953/(1 + Math.exp(-0.131*(Energy - 42.23))) + 0.0296*Math.atan(Math.abs(Math.pow(0.0069*(Energy - 42.23), 0.83))) + 0.787);
+  		}
+  		return val;
+  		}
+  	
+  	
+  
+  }
+  
+  const CalConfiLevel = async (E1,E2) => {
+  try {
+  	let datName = "";
+  	if(POS==='110mm'){
+      	if(paramtype==='β'){
+      		 datName = "ciGridBeta.dat";
+      	
+      	}
+      	else{
+      		 datName = "ciGridGamma.dat";
+      	
+      	}
+      	}
+      	else{return 0;}
+  	
+    const response = await fetch(import.meta.env.BASE_URL + datName);
+    const text = await response.text();
+
+    const lines = text.trim().split('\n');
+
+    // Remove header if present
+    const parsedData = lines.map(line => {
+      const [Energy1, Energy2, b2val,sigma1, sigma2] = line.trim().split(/\s+/).map(Number);
+      return { Energy1, Energy2, b2val,sigma1, sigma2 };
+    });
+
+    let closest = null;
+    let minDistance = Infinity;
+
+    parsedData.forEach(row => {
+      const dist = Math.sqrt(
+        Math.pow(row.Energy1 - E1, 2) + Math.pow(row.Energy2 - E2, 2)
+      );
+      if (dist < minDistance) {
+        minDistance = dist;
+        closest = row;
+      }
+    });
+
+    if (closest) {
+      console.log(`Closest match:`, closest);
+      //alert(`σ₁ = ${closest.sigma1}, σ₂ = ${closest.sigma2}`);
+      setResultJK(closest.b2val);
+      setResultJKsig1(closest.sigma1);
+      setResultJKsig2(closest.sigma2);
+      setE1Close(closest.Energy1);
+      setE2Close(closest.Energy2);
+      
+    } else {
+      alert("No match found.");
+    }
+  } catch (err) {
+    console.error('Error loading .dat file:', err);
+  }
+};
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
   const loadExcelAndPlot = async () => {
@@ -109,6 +222,7 @@ function App() {
   const CalBestFit  = () => {
   	E1 = GammaE.InputGammaE1;
   	E2 = GammaE.InputGammaE2;
+  	CalConfiLevel(E1,E2);
   	console.log('Gamma1:', GammaE.InputGammaE1);
   	console.log('Gamma2:', GammaE.InputGammaE2);
   	if(POS==="110mm"){
@@ -123,7 +237,130 @@ function App() {
   		
   		}
   	setResult(fitVal);
+  	setResulterr(CalErorr(E1,E2));
+  	
   }
+  
+  
+  
+  
+  const CalErorr  = (E1,E2) => {
+  	if(POS==="110mm"){
+  		if(paramtype==="γ"){
+  		A_val = 0.0953;
+  		E_0 = 42.23;
+  		B_val = 0.0296;
+  		C_val = 0.787;
+  		lambda_s = 0.131;
+  		lambda_t = 0.83;
+  		k_val = 0.0069;  
+  		A_err = 0.0012;
+  		E_0err = 0.18;
+  		B_err = 0.0007;
+  		C_err = 0.008;
+  		lambda_s_err = 0.002;
+  		lambda_t_err = 0.03;
+  		k_err = 0.0003;
+  		
+  		
+  		
+  		}
+  		else if(paramtype==="β"){
+  		A_val = 0.058;
+  		E_0 = 30.0;
+  		B_val = 0.0199;
+  		C_val = 0.89;
+  		lambda_s = 0.093;
+  		lambda_t = 0.67;
+  		k_val = 0.035;  
+  		A_err = 0.003;
+  		E_0err = 0.7;
+  		B_err = 0.0007;
+  		C_err = 0.002;
+  		lambda_s_err = 0.004;
+  		lambda_t_err = 0.04;
+  		k_err = 0.002;
+  		
+  		
+  		}
+  	}
+  	
+  	let df_dA_val1 = 0;
+  	let df_dA_val2 = 0;
+  	let df_dlamda_s1 = 0;
+  	let df_dlamda_s2 = 0;
+  	let df_dE_0_1 = 0;
+  	let df_dE_0_2 = 0;
+  	let df_dB1 = 0;
+  	let df_dB2 = 0;
+  	let df_dk_val1 = 0;
+  	let df_dk_val2 = 0;
+  	let df_dlambda_t1 = 0;
+  	let df_dlambda_t2 = 0;
+  	let df_dC_val1 = 0;
+  	let df_dC_val2 = 0;
+  	let errG1 = 0;
+  	let errG2 = 0;
+  	
+  	df_dA_val1 = 1/(1+Math.exp(-lambda_s*(E1-E_0)))*g_function(E2) ;
+  	df_dA_val2 = 1/(1+Math.exp(-lambda_s*(E2-E_0)))*g_function(E1) ;
+  	
+  	
+  	
+  	df_dlamda_s1 = -1/(Math.pow(1+Math.exp(-lambda_s*(E1-E_0)),2))*(E_0-E1)*Math.exp(-lambda_s*(E1-E_0)*A_val);
+  	df_dlamda_s2 = -1/(Math.pow(1+Math.exp(-lambda_s*(E2-E_0)),2))*(E_0-E2)*Math.exp(-lambda_s*(E2-E_0)*A_val);
+  	
+  	
+  	
+  	df_dE_0_1 = -(Math.pow(1+Math.exp(-lambda_s*(E1-E_0)),-2))*lambda_s*Math.exp(-lambda_s*(E1-E_0))*A_val+ k_val*lambda_t*Math.pow(k_val*Math.atan(E1-E_0),lambda_t-1)*B_val/(Math.pow(E1-E_0,2)+1);
+  	df_dE_0_2 = -(Math.pow(1+Math.exp(-lambda_s*(E2-E_0)),-2))*lambda_s*Math.exp(-lambda_s*(E2-E_0))*A_val+ k_val*lambda_t*Math.pow(k_val*Math.atan(E2-E_0),lambda_t-1)*B_val/(Math.pow(E2-E_0,2)+1);
+  	
+  	
+  	
+  	df_dB1 = Math.atan(Math.pow(k_val*(E1-E_0),lambda_t));
+  	df_dB2 = Math.atan(Math.pow(k_val*(E2-E_0),lambda_t));
+  	
+  	
+  	
+  	df_dk_val1 = B_val*lambda_t*Math.pow((k_val*Math.atan(E1-E_0)),lambda_t)/k_val 
+  	df_dk_val2 = B_val*lambda_t*Math.pow((k_val*Math.atan(E2-E_0)),lambda_t)/k_val;
+  	
+  	
+  	
+  	df_dlambda_t1 = Math.pow(k_val*Math.atan(E1-E_0),lambda_t)*Math.log(k_val*Math.atan(E1-E_0))*B_val;
+  	df_dlambda_t2 = Math.pow(k_val*Math.atan(E2-E_0),lambda_t)*Math.log(k_val*Math.atan(E2-E_0))*B_val;
+  	
+  	df_dC_val1 =g_function(E2);
+  	df_dC_val2 =g_function(E1);
+  	
+  	errG1 = Math.sqrt(Math.pow(df_dA_val1*A_err,2) + Math.pow(df_dlamda_s1*lambda_s_err,2) + Math.pow(df_dE_0_1*E_0err,2) +Math.pow(df_dB1*B_err,2) +Math.pow(df_dk_val1*k_err,2) + Math.pow(df_dlambda_t1*lambda_t_err,2) );
+  	
+  	errG2 = Math.sqrt(Math.pow(df_dA_val2*A_err,2) + Math.pow(df_dlamda_s2*lambda_s_err,2) + Math.pow(df_dE_0_2*E_0err,2) +Math.pow(df_dB2*B_err,2) +Math.pow(df_dk_val2*k_err,2) + Math.pow(df_dlambda_t2*lambda_t_err,2) );
+  	
+  	console.log("df_dA_val1:", df_dA_val1);
+  	console.log("df_dlamda_s1:", df_dlamda_s1);
+  	console.log("lambda_s_err:", lambda_s_err);
+  	console.log("df_dE_0_1:", df_dE_0_1);
+  	console.log("df_dB1:", df_dB1);
+  	console.log("df_dk_val1:", df_dk_val1);
+  	console.log("df_dlambda_t1:", df_dlambda_t1);
+  	console.log("return param:", g_function(E1)*g_function(E2));
+  	
+  	return Math.sqrt(Math.pow(errG1*g_function(E2),2)+ Math.pow(errG2*g_function(E1),2));
+  	
+  
+  
+  }
+
+
+
+
+
+
+
+
+
+
 
   return (
     <>
@@ -170,7 +407,7 @@ Volume 922, 1 April 2019, Pages 47-63
       <div style={{ display: 'flex', alignItems: 'left', marginTop: 20 }}>
       <Input
             name="InputGammaE1"
-            addonBefore="Energy2"
+            addonBefore={<span className="addon-label">Energy1</span>}
             placeholder="Enter Energy of First Gamma ray"
             allowClear
             value={GammaE.InputGammaE1}
@@ -180,7 +417,7 @@ Volume 922, 1 April 2019, Pages 47-63
 
           <Input
             name="InputGammaE2"
-            addonBefore="Energy2"
+            addonBefore={<span className="addon-label">Energy2</span>}
             placeholder="Enter Energy of Second Gamma ray"
             allowClear
             value={GammaE.InputGammaE2}
@@ -189,14 +426,19 @@ Volume 922, 1 April 2019, Pages 47-63
           />
       
       </div>
-      
+      <Space direction="vertical" size="large">
+      <div />
+	
       <div>
        <Button type="primary" onClick={CalBestFit}>
             Calculate
           </Button>
-       <Button onClick={loadExcelAndPlot}>Load and Plot Excel</Button>
-      <p>The estimated value is:	{result}</p>
+       <Button onClick={loadExcelAndPlot}>Load and Plot</Button>
+      <p>Using fit data and standard error propagation the value is estimated as:	{result} +- {resulterr}</p>
+      <p>Using root data and confidence level error the value is estimated as:	{resultJK} with σ₁ = {resultJKsig1} and σ₂ = {resultJKsig2}</p>
+      <p>The closest energy to the map is at {E1Close}  and   {E2Close}</p>
       </div>
+      </Space>
      <div style={{ padding: 20 }}>
       
       {plotData110 && (
@@ -215,7 +457,10 @@ Volume 922, 1 April 2019, Pages 47-63
       )}
     </div>
       <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
+         press calculate button to calculate the estimated parameter based on selection made
+      </p>
+      <p className="read-the-docs">
+         press load and plot button to plot the evolution of parameter selected over energy.
       </p>
     </>
   )

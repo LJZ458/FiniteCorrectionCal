@@ -32,7 +32,11 @@
     animation: logo-spin infinite 20s linear;
   }
 }
-
+.addon-label {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
 .card {
   padding: 2em;
 }
