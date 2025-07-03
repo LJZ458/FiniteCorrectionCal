@@ -4,6 +4,6 @@ import react from '@vitejs/plugin-react'
 
 // Replace 'your-username' and 'your-repo-name' accordingly
 export default defineConfig({
-  base: '/FiniteCorrectionCal/',
+  base: 'LJZ458/FiniteCorrectionCal/',
   plugins: [react()],
 })
