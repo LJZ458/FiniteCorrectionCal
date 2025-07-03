@@ -6,6 +6,57 @@ import readXlsxFile from 'read-excel-file';
 import Plot from 'react-plotly.js';
 import { Table, Button, Input, Space } from "antd";
 function App() {
+
+
+const Tablecolumns = [
+  {
+    title: 'SetUp',
+    dataIndex: 'key',
+    key: 'key',
+    fixed: 'left',
+  },
+  { title: 'GRIF110mm', dataIndex: 'g110', key: 'g110' },
+  { title: 'GRIF145mm', dataIndex: 'g145', key: 'g145' },
+];
+
+const Tabledata = [
+  {
+    key: 'Chamber',
+    g110: "upstream downstream sceptar",
+    g145: "empty chamber",
+   
+  },
+  {
+    key: 'Delrins',
+    g110: "No delrin",
+    g145: "No delrin",
+   
+  },
+  {
+     key: 'Number of Clovers',
+    g110: 16 ,
+    g145:16,
+  },
+  {
+     key: 'Clovers distance',
+    g110: "All clovers at 11 cm" ,
+    g145:"All clovers at 14.5 cm",
+  },
+  {
+     key: 'Suppressors',
+    g110: "No suppressors ",
+    g145: "No suppressors ",
+  },
+   {
+     key: 'Spectrum',
+    g110: " No addback  ",
+    g145: " No addback  ",
+  },
+  
+];
+
+
+
   const [count, setCount] = useState(0);
   const [result, setResult] = useState('');
   const [resulterr, setResulterr] = useState('');
@@ -471,6 +522,16 @@ Volume 922, 1 April 2019, Pages 47-63
       <p className="read-the-docs">
          press load and plot button to plot the evolution of parameter selected over energy.
       </p>
+      <Table
+      columns={Tablecolumns}
+      dataSource={Tabledata}
+      bordered
+      pagination={false}
+      size="middle"
+    />
+      
+      
+      
     </>
   )
 }
