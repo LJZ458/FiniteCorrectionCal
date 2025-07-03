@@ -83,7 +83,7 @@ function App() {
   
   const CalConfiLevel = async (E1,E2) => {
   try {
-  	let datName = "";
+  	let datName = "null.dat";
   	if(POS==='110mm'){
       	if(paramtype==='β'){
       		 datName = "ciGridBeta.dat";
@@ -94,7 +94,14 @@ function App() {
       	
       	}
       	}
-      	else{return 0;}
+      	else{
+      	setResultJK(0);
+    	setResultJKsig1(0);
+    	setResultJKsig2(0);
+    	setE1Close(0);
+    	setE2Close(0);
+    	return 0;}
+      	
   	
     const response = await fetch(import.meta.env.BASE_URL + datName);
     const text = await response.text();
@@ -133,6 +140,7 @@ function App() {
       alert("No match found.");
     }
   } catch (err) {
+    
     console.error('Error loading .dat file:', err);
   }
 };
@@ -236,6 +244,7 @@ function App() {
   		
   		
   		}
+  	
   	setResult(fitVal);
   	setResulterr(CalErorr(E1,E2));
   	
