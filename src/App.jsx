@@ -12,7 +12,7 @@ function App() {
   const [POS, setPOS] = useState(null);
   const [paramtype, setparamtype] = useState(null);
   const [GammaE, setGammaE] = useState({InputGammaE1: "",
-    InputGammaE1: "",});
+    InputGammaE2: "",});
   const [Gamma2E, setGamma2E] = useState(null);
   const [plotData110, setPlotData110] = useState(null);
   const [plotData145, setPlotData145] = useState(null);
@@ -48,8 +48,8 @@ function App() {
     try {
       if(POS==='110mm'){
       	if(paramtype==='β'){
-      filename1 = '/GRIF110ATT_beta.xlsx';}
-      	else if(paramtype==='γ'){filename1 = '/GRIF110ATT_gamma.xlsx';}
+      filename1 =process.env.PUBLIC_URL+ '/GRIF110ATT_beta.xlsx';}
+      	else if(paramtype==='γ'){filename1 =process.env.PUBLIC_URL+ '/GRIF110ATT_gamma.xlsx';}
       }
       else if(POS==='145'){filename1 = 'GRIF145ATT.xlsx';}
 
