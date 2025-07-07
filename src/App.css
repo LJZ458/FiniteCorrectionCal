@@ -41,6 +41,10 @@
   padding: 2em;
 }
 
+body {
+      background-color: #000000; /* Or simply 'black' */
+    }
+
 .read-the-docs {
   color: #888;
 }

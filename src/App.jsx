@@ -425,6 +425,7 @@ const Tabledata = [
   return (
     <>
       <div>
+      <div>
       <h1>Finite Detector Size Atteneuation Factor Calculator
       </h1>
       <h2>This calculator is designed for angular correlation atteneuation factor calculation with GRIFFIN 
@@ -531,7 +532,7 @@ Volume 922, 1 April 2019, Pages 47-63
     />
       
       
-      
+    </div>
     </>
   )
 }
