@@ -519,6 +519,13 @@ Volume 922, 1 April 2019, Pages 47-63
       <p className="read-the-docs">
          press load and plot button to plot the evolution of parameter selected over energy.
       </p>
+      <p className="read-the-docs">
+         The fitted data result uses fit parameter with precision to uncertainty level with a error propagation without considering covariance.
+      </p>
+      <p className="read-the-docs">
+         The root data evaluates directly based on root fit function with interval of 5keV up to 5MeV. Errors are estimated using root confidence interval where σ₁ is given at 68.3% confidence interval and σ₂ given at 95.5% confidence interval.
+      </p>
+      
       <Table
       columns={Tablecolumns}
       dataSource={Tabledata}
