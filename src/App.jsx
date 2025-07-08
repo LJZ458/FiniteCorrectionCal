@@ -158,27 +158,25 @@ const Tabledata = [
     const text = await response.text();
 
     const lines = text.trim().split('\n');
-
+    
+    
+	
     // Remove header if present
     const parsedData = lines.map(line => {
       const [Energy1, Energy2, b2val,sigma1, sigma2] = line.trim().split(/\s+/).map(Number);
       return { Energy1, Energy2, b2val,sigma1, sigma2 };
     });
-
+	
     let closest = null;
     let minDistance = Infinity;
+    const rowIndex = (Math.round(E1/5)-1)*1000+(Math.round(E2/5)-1);
+    
+    closest=parsedData[rowIndex];
+      
+      
+ 
 
-    parsedData.forEach(row => {
-      const dist = Math.sqrt(
-        Math.pow(row.Energy1 - E1, 2) + Math.pow(row.Energy2 - E2, 2)
-      );
-      if (dist < minDistance) {
-        minDistance = dist;
-        closest = row;
-      }
-    });
-
-    if (closest) {
+    
       console.log(`Closest match:`, closest);
       //alert(`σ₁ = ${closest.sigma1}, σ₂ = ${closest.sigma2}`);
       setResultJK(closest.b2val);
@@ -187,9 +185,7 @@ const Tabledata = [
       setE1Close(closest.Energy1);
       setE2Close(closest.Energy2);
       
-    } else {
-      alert("No match found.");
-    }
+  
   } catch (err) {
     
     console.error('Error loading .dat file:', err);
