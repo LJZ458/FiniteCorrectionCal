@@ -138,11 +138,12 @@ const Tabledata = [
   
   }
   //this is a old version loading data points and error from dat(txt) file
-  //a newer method following use 2d array from js file with 10 files each
+  //a newer method following use 2d array from json file with 10 files each
   
   const CalConfiLevel = async (E1, E2) => {
   try {
     if (POS !== '110mm') {
+      // Reset if POS is invalid
       setResultJK(0);
       setResultJKsig1(0);
       setResultJKsig2(0);
@@ -151,47 +152,40 @@ const Tabledata = [
       return;
     }
 
-
+  
     const baseName = paramtype === 'β' ? 'ciGridBeta' : 'ciGridGamma';
     const totalE1 = 1000;      // total E1 points in full grid
     const totalE2 = 1000;       // total E2 points in full grid
     const parts = 10;           // number of part files
 
-    const E1_min = 5;           // minimum E1 value
+    const E1_min = 5;           // minimum E1
     const E1_step = 5;          // step in E1
-    const E2_min = 5;           // minimum E2 value
+    const E2_min = 5;           // minimum E2
     const E2_step = 5;          // step in E2
 
-    // Compute full-grid indices
-
+  
     const E1_index = Math.round((E1 - E1_min) / E1_step);
     const E2_index = Math.round((E2 - E2_min) / E2_step);
 
-
-    // Determine which part file to load
-
+    
     const rowsPerPart = Math.ceil(totalE1 / parts);
     const partIndex = Math.min(parts, Math.floor(E1_index / rowsPerPart) + 1);
 
-
-    const module = await import(
-      /* @vite-ignore */ `./${baseName}_part${partIndex}.js`
-    );
-
-
-    const data = module[`${baseName}_part${partIndex}`] || Object.values(module)[0];
-
-    if (!data) throw new Error(`No data found in part ${partIndex}`);
+    const url = `${import.meta.env.BASE_URL}${baseName}/${baseName}_part${partIndex}.json`;
 
    
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to load ${url}`);
+    const data = await res.json();
+
+    
     const E1_index_in_part = E1_index - (partIndex - 1) * rowsPerPart;
     const position = E1_index_in_part * totalE2 + E2_index;
 
     if (position < 0 || position >= data.length)
-      throw new Error(`Invalid index ${position} for part ${partIndex}`);
+      throw new Error(`Invalid index ${position} in part ${partIndex}`);
 
     const [Energy1, Energy2, b2val, sigma1, sigma2] = data[position];
-
 
     setResultJK(b2val);
     setResultJKsig1(sigma1);
@@ -213,6 +207,7 @@ const Tabledata = [
     setE2Close(0);
   }
 };
+
 
 
 
