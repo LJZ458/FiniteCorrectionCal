@@ -151,40 +151,70 @@ const Tabledata = [
       return;
     }
 
+
     const baseName = paramtype === 'β' ? 'ciGridBeta' : 'ciGridGamma';
+    const totalE1 = 1000;      // total E1 points in full grid
+    const totalE2 = 1000;       // total E2 points in full grid
+    const parts = 10;           // number of part files
 
-  
-    const partIndex = Math.min(10, Math.max(1, Math.ceil(E1 / 100)));
+    const E1_min = 5;           // minimum E1 value
+    const E1_step = 5;          // step in E1
+    const E2_min = 5;           // minimum E2 value
+    const E2_step = 5;          // step in E2
 
-    const modulePath = `../public/${baseName}_part${partIndex}.js`;
+    // Compute full-grid indices
 
-    // Dynamically import only that part
-    const module = await import(/* @vite-ignore */ modulePath);
-    const data =
-      module[`${baseName}_part${partIndex}`] || Object.values(module)[0];
-
-    if (!data) throw new Error(`No data found in ${modulePath}`);
-
-   
     const E1_index = Math.round((E1 - E1_min) / E1_step);
     const E2_index = Math.round((E2 - E2_min) / E2_step);
-    const position = E1_index * E2_count + E2_index;
 
-    const [Energy1, Energy2, b2val, sigma1, sigma2] = data[position] || [];
 
-    if (b2val === undefined) throw new Error(`Invalid index ${position}`);
+    // Determine which part file to load
 
-    // Update UI/state
+    const rowsPerPart = Math.ceil(totalE1 / parts);
+    const partIndex = Math.min(parts, Math.floor(E1_index / rowsPerPart) + 1);
+
+
+    const module = await import(
+      /* @vite-ignore */ `./${baseName}_part${partIndex}.js`
+    );
+
+
+    const data = module[`${baseName}_part${partIndex}`] || Object.values(module)[0];
+
+    if (!data) throw new Error(`No data found in part ${partIndex}`);
+
+   
+    const E1_index_in_part = E1_index - (partIndex - 1) * rowsPerPart;
+    const position = E1_index_in_part * totalE2 + E2_index;
+
+    if (position < 0 || position >= data.length)
+      throw new Error(`Invalid index ${position} for part ${partIndex}`);
+
+    const [Energy1, Energy2, b2val, sigma1, sigma2] = data[position];
+
+
     setResultJK(b2val);
     setResultJKsig1(sigma1);
     setResultJKsig2(sigma2);
     setE1Close(Energy1);
     setE2Close(Energy2);
 
+    console.log(
+      `Loaded part ${partIndex}, position ${position}:`,
+      { Energy1, Energy2, b2val, sigma1, sigma2 }
+    );
+
   } catch (err) {
     console.error('Error loading part or accessing index:', err);
+    setResultJK(0);
+    setResultJKsig1(0);
+    setResultJKsig2(0);
+    setE1Close(0);
+    setE2Close(0);
   }
 };
+
+
 
 
   
@@ -417,9 +447,9 @@ const Tabledata = [
     <>
       <div>
       <div>
-      <h1>Finite Detector Size Atteneuation Factor Calculator
+      <h1>Finite Detector Size Attenuation Factor Calculator
       </h1>
-      <h2>This calculator is designed for angular correlation atteneuation factor calculation with GRIFFIN 
+      <h2>This calculator is designed for angular correlation attenuation factor calculation with GRIFFIN 
       </h2>
       <h2>For detailed information of corrections please refer to: 
       </h2>
