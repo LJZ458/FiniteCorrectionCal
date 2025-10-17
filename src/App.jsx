@@ -5,6 +5,9 @@ import { Select } from 'antd';
 import readXlsxFile from 'read-excel-file';
 import Plot from 'react-plotly.js';
 import { Table, Button, Input, Space } from "antd";
+
+import { ciGridGamma } from './../public/ciGridGamma.js';
+import { ciGridBeta } from './../public/ciGridBeta.js';
 function App() {
 
 
@@ -131,64 +134,53 @@ const Tabledata = [
   	
   
   }
-  
-  const CalConfiLevel = async (E1,E2) => {
+  //this is a old version loading data points and error from dat(txt) file
+  //a newer method use 2d array from js file
+  const CalConfiLevel = async (E1, E2) => {
   try {
-  	let datName = "null.dat";
-  	if(POS==='110mm'){
-      	if(paramtype==='β'){
-      		 datName = "ciGridBeta.dat";
-      	
-      	}
-      	else{
-      		 datName = "ciGridGamma.dat";
-      	
-      	}
-      	}
-      	else{
-      	setResultJK(0);
-    	setResultJKsig1(0);
-    	setResultJKsig2(0);
-    	setE1Close(0);
-    	setE2Close(0);
-    	return 0;}
-      	
-  	
-    const response = await fetch(import.meta.env.BASE_URL + datName);
-    const text = await response.text();
+    let data = null;
 
-    const lines = text.trim().split('\n');
-    
-    
-	
-    // Remove header if present
-    const parsedData = lines.map(line => {
-      const [Energy1, Energy2, b2val,sigma1, sigma2] = line.trim().split(/\s+/).map(Number);
-      return { Energy1, Energy2, b2val,sigma1, sigma2 };
-    });
-	
-    let closest = null;
-    let minDistance = Infinity;
-    const rowIndex = (Math.round(E1/5)-1)*1000+(Math.round(E2/5)-1);
-    
-    closest=parsedData[rowIndex];
-      
-      
- 
+    if (POS === '110mm') {
+      if (paramtype === 'β') {
+        data = ciGridBeta;
+      } else {
+        data = ciGridGamma;
+      }
+    } else {
+      setResultJK(0);
+      setResultJKsig1(0);
+      setResultJKsig2(0);
+      setE1Close(0);
+      setE2Close(0);
+      return 0;
+    }
+
+    if (!data) throw new Error('No data selected');
 
     
-      console.log(`Closest match:`, closest);
-      //alert(`σ₁ = ${closest.sigma1}, σ₂ = ${closest.sigma2}`);
-      setResultJK(closest.b2val);
-      setResultJKsig1(closest.sigma1);
-      setResultJKsig2(closest.sigma2);
-      setE1Close(closest.Energy1);
-      setE2Close(closest.Energy2);
-      
-  
+    const parsedData = data.map(([Energy1, Energy2, b2val, sigma1, sigma2]) => ({
+      Energy1,
+      Energy2,
+      b2val,
+      sigma1,
+      sigma2,
+    }));
+
+    // Compute index or find closest
+    const rowIndex = (Math.round(E1 / 5) - 1) * 1000 + (Math.round(E2 / 5) - 1);
+    const closest = parsedData[rowIndex];
+
+    if (!closest) throw new Error('Invalid index or data missing');
+
+    console.log(`Closest match:`, closest);
+
+    setResultJK(closest.b2val);
+    setResultJKsig1(closest.sigma1);
+    setResultJKsig2(closest.sigma2);
+    setE1Close(closest.Energy1);
+    setE2Close(closest.Energy2);
   } catch (err) {
-    
-    console.error('Error loading .dat file:', err);
+    console.error('Error reading data:', err);
   }
 };
   
@@ -211,7 +203,7 @@ const Tabledata = [
   
   
   
-  
+  //loading ex
   const loadExcelAndPlot = async () => {
     try {
       if(POS==='110mm'){
