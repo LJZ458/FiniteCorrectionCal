@@ -156,7 +156,7 @@ const Tabledata = [
   
     const partIndex = Math.min(10, Math.max(1, Math.ceil(E1 / 100)));
 
-    const modulePath = `../public/${baseName}/${baseName}_part${partIndex}.js`;
+    const modulePath = `../public/${baseName}_part${partIndex}.js`;
 
     // Dynamically import only that part
     const module = await import(/* @vite-ignore */ modulePath);
