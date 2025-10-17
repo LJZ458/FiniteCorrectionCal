@@ -5,12 +5,15 @@ import { Select } from 'antd';
 import readXlsxFile from 'read-excel-file';
 import Plot from 'react-plotly.js';
 import { Table, Button, Input, Space } from "antd";
+//only load when needed
 
-import { ciGridGamma } from './../public/ciGridGamma.js';
-import { ciGridBeta } from './../public/ciGridBeta.js';
 function App() {
 
-
+const E1_min = 5;        
+const E1_step = 5;       
+const E2_min = 5;         
+const E2_step = 5;       
+const E2_count = 1000;
 const Tablecolumns = [
   {
     title: 'SetUp',
@@ -135,59 +138,59 @@ const Tabledata = [
   
   }
   //this is a old version loading data points and error from dat(txt) file
-  //a newer method use 2d array from js file
+  //a newer method following use 2d array from js file with 10 files each
+  
   const CalConfiLevel = async (E1, E2) => {
   try {
-    let data = null;
-
-    if (POS === '110mm') {
-      if (paramtype === 'β') {
-        data = ciGridBeta;
-      } else {
-        data = ciGridGamma;
-      }
-    } else {
+    if (POS !== '110mm') {
       setResultJK(0);
       setResultJKsig1(0);
       setResultJKsig2(0);
       setE1Close(0);
       setE2Close(0);
-      return 0;
+      return;
     }
 
-    if (!data) throw new Error('No data selected');
+    const baseName = paramtype === 'β' ? 'ciGridBeta' : 'ciGridGamma';
 
-    
-    const parsedData = data.map(([Energy1, Energy2, b2val, sigma1, sigma2]) => ({
-      Energy1,
-      Energy2,
-      b2val,
-      sigma1,
-      sigma2,
-    }));
+  
+    const partIndex = Math.min(10, Math.max(1, Math.ceil(E1 / 100)));
 
-    // Compute index or find closest
-    const rowIndex = (Math.round(E1 / 5) - 1) * 1000 + (Math.round(E2 / 5) - 1);
-    const closest = parsedData[rowIndex];
+    const modulePath = `../public/${baseName}/${baseName}_part${partIndex}.js`;
 
-    if (!closest) throw new Error('Invalid index or data missing');
+    // Dynamically import only that part
+    const module = await import(/* @vite-ignore */ modulePath);
+    const data =
+      module[`${baseName}_part${partIndex}`] || Object.values(module)[0];
 
-    console.log(`Closest match:`, closest);
+    if (!data) throw new Error(`No data found in ${modulePath}`);
 
-    setResultJK(closest.b2val);
-    setResultJKsig1(closest.sigma1);
-    setResultJKsig2(closest.sigma2);
-    setE1Close(closest.Energy1);
-    setE2Close(closest.Energy2);
+   
+    const E1_index = Math.round((E1 - E1_min) / E1_step);
+    const E2_index = Math.round((E2 - E2_min) / E2_step);
+    const position = E1_index * E2_count + E2_index;
+
+    const [Energy1, Energy2, b2val, sigma1, sigma2] = data[position] || [];
+
+    if (b2val === undefined) throw new Error(`Invalid index ${position}`);
+
+    // Update UI/state
+    setResultJK(b2val);
+    setResultJKsig1(sigma1);
+    setResultJKsig2(sigma2);
+    setE1Close(Energy1);
+    setE2Close(Energy2);
+
   } catch (err) {
-    console.error('Error reading data:', err);
+    console.error('Error loading part or accessing index:', err);
   }
 };
+
+
   
   
   
-  
-  
+
   
   
   
